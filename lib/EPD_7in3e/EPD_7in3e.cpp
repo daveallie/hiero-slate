@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "EPD_7in3e.h"
+#include <Logger.h>
+
+static const char* TAG = "EPD";
 
 EPD_7in3e::EPD_7in3e() {
   reset_pin = 2;
@@ -9,25 +12,26 @@ EPD_7in3e::EPD_7in3e() {
   busy_pin = 5;
   width = 800;
   height = 480;
+
+  // Setup pins
+  pinMode(cs_pin, OUTPUT);
+  pinMode(dc_pin, OUTPUT);
+  pinMode(reset_pin, OUTPUT);
+  pinMode(busy_pin, INPUT);
+
+  // Init outputs
+  digitalWrite(cs_pin, LOW); // Leave CS low to ensure display is always selected
+  digitalWrite(dc_pin, HIGH); // Assume data
+  digitalWrite(reset_pin, HIGH); // Leave reset pin high
 }
 
 void EPD_7in3e::Init() const {
-  // Setup pins
-  pinMode(cs_pin, OUTPUT);
-  pinMode(reset_pin, OUTPUT);
-  pinMode(dc_pin, OUTPUT);
-  pinMode(busy_pin, INPUT);
+  Logger::Log(TAG, "Initializing display");
 
   // Setup SPI
   SPI.begin();
   SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
 
-  // Leave CS low to ensure display is always selected
-  digitalWrite(cs_pin, LOW);
-
-  // Reset display
-  digitalWrite(reset_pin, HIGH);
-  delay(20);
   digitalWrite(reset_pin, LOW);
   delay(2);
   digitalWrite(reset_pin, HIGH);
@@ -125,6 +129,8 @@ void EPD_7in3e::WaitUntilNotBusy() const {
 }
 
 void EPD_7in3e::RefreshDisplay() const {
+  Logger::Log(TAG, "Refreshing display");
+
   SendCommand(EPD_CMD_PON); // POWER_ON
   WaitUntilNotBusy();
 

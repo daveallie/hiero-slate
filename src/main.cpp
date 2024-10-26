@@ -3,7 +3,9 @@
 #include <EPD_7in3e.h>
 #include <ImageDataFetcher.h>
 #include <NetStack.h>
+#include <Logger.h>
 
+static const char* TAG = "CORE";
 NetStack ns(WIFI_SSID, WIFI_PASSWORD);
 EPD_7in3e epd;
 ImageDataFetcher idf;
@@ -13,12 +15,10 @@ void renderRequestStart() {
 }
 
 void renderRequestImagePart(const u8 data[], const size_t size) {
-  Serial.print('.');
   epd.SendRenderChunk(data, size);
 }
 
 void renderRequestFinish(const size_t total) {
-  Serial.println("\nFetched " + String(total) + " bytes");
   epd.FinishRenderChunks();
 }
 
@@ -26,12 +26,13 @@ void setup() {
   // Setup serial
   Serial.begin(115200);
   Serial.println("\n");
-  Serial.println("Starting");
+
+  Logger::Log(TAG, "Starting");
 
   if (ESP.getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
-    Serial.println("Woke up from deep sleep");
+    Logger::Log(TAG, "Woke up from deep sleep");
   } else {
-    Serial.println("Woke up from reset / fresh boot");
+    Logger::Log(TAG, "Woke up from reset / fresh boot");
   }
 
   // Connect to network
@@ -54,5 +55,6 @@ void setup() {
 }
 
 void loop() {
-  // ESP.deepSleep(30 * 1000000);
+  Logger::Log(TAG, "Going to sleep for 5 minutes");
+  ESP.deepSleep(5 * 60 * 1000000); // 5 minutes
 }

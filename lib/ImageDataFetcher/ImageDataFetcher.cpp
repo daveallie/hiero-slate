@@ -1,7 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include "ImageDataFetcher.h"
+#include <Logger.h>
 #include "rootca.h"
+
+static const char* TAG = "IDF";
 
 void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)(size_t size)) const {
   WiFiClientSecure client;
@@ -10,25 +13,26 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
   // TODO - Make this configurable?
   client.setTrustAnchors(new X509List(rootca_der, rootca_der_len));
 
+  Logger::Log(TAG, "Begin fetching image data from: " + String(IDF_URL));
   if (!http.begin(client, IDF_URL)) {
-    Serial.println("[HTTP] Unable to connect");
+    Logger::Log(TAG, "Unable to connect");
     return;
   }
 
   const int httpCode = http.GET();
   if (httpCode <= 0) {
-    Serial.println("[HTTP] GET... failed, error: " + HTTPClient::errorToString(httpCode));
+    Logger::Log(TAG, "GET failed, error: " + HTTPClient::errorToString(httpCode));
     return;
   }
 
   if (httpCode != HTTP_CODE_OK) {
-    Serial.println("[HTTP] Got non-200 status code: " + String(httpCode));
+    Logger::Log(TAG, "Got non-200 status code: " + String(httpCode));
     return;
   }
 
   size_t len = http.getSize();
   if (len != 192000) {
-    Serial.println("[HTTP] Was expecting response of 192000 bytes, got: " + String(len));
+    Logger::Log(TAG, "Was expecting response of 192000 bytes, got: " + String(len));
     return;
   }
 
@@ -46,11 +50,12 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
       read += size;
       processPartCb(data, size);
     } else {
-      Serial.println("[HTTP] Read timeout");
+      Logger::Log(TAG, "Read timeout");
     }
   }
 
   http.end();
+  Logger::Log(TAG, "Fetched " + String(read) + " bytes");
 
   finishCb(read);
 }

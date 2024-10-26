@@ -1,18 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include "ImageDataFetcher.h"
 #include <Logger.h>
+#include <TimeUtils.h>
+#include "ImageDataFetcher.h"
 #include "rootca.h"
 
 static const char* TAG = "IDF";
 
 String buildHeaderValue() {
-  auto now = time(nullptr);
-  auto timeinfo = localtime(&now);
-  char timestampBuffer[20]; // "YYYY-MM-DD HH:MM:SS" + null terminator
-  strftime(timestampBuffer, sizeof(timestampBuffer), "%Y-%m-%d %H:%M:%S", timeinfo);
-
-  return "time=" + String(timestampBuffer);
+  return "time=" + TimeUtils::NowISOString();
 }
 
 void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)()) const {

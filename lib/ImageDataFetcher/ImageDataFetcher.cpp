@@ -6,6 +6,15 @@
 
 static const char* TAG = "IDF";
 
+String buildHeaderValue() {
+  auto now = time(nullptr);
+  auto timeinfo = localtime(&now);
+  char timestampBuffer[20]; // "YYYY-MM-DD HH:MM:SS" + null terminator
+  strftime(timestampBuffer, sizeof(timestampBuffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+
+  return "time=" + String(timestampBuffer);
+}
+
 void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)(size_t size)) const {
   WiFiClientSecure client;
   HTTPClient http;
@@ -18,6 +27,8 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
     Logger::Log(TAG, "Unable to connect");
     return;
   }
+
+  http.addHeader("X-Device-Data", buildHeaderValue());
 
   const int httpCode = http.GET();
   if (httpCode <= 0) {

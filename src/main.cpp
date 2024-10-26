@@ -22,11 +22,24 @@ void renderRequestFinish(const size_t total) {
   epd.FinishRenderChunks();
 }
 
+void flashLight(int times = 1) {
+  for (int i = 0; i < times; i++) {
+    if (i > 0) delay(200);
+    digitalWrite(0, LOW);
+    delay(200);
+    digitalWrite(0, HIGH);
+  }
+}
+
 void setup() {
+  // Turn on light
+  pinMode(0, OUTPUT);
+  digitalWrite(0, LOW);
+
   // Setup serial
   Serial.begin(115200);
-  Serial.println("\n");
 
+  Serial.println("\n");
   Logger::Log(TAG, "Starting");
 
   if (ESP.getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
@@ -37,6 +50,9 @@ void setup() {
 
   // Connect to network
   if (!ns.Connect()) {
+    digitalWrite(0, HIGH);
+    delay(500);
+    flashLight(3);
     return;
   }
 
@@ -55,6 +71,8 @@ void setup() {
 }
 
 void loop() {
+  // Turn off light
+  digitalWrite(0, HIGH);
   Logger::Log(TAG, "Going to sleep for 5 minutes");
   ESP.deepSleep(5 * 60 * 1000000); // 5 minutes
 }

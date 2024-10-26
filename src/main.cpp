@@ -4,6 +4,7 @@
 #include <ImageDataFetcher.h>
 #include <NetStack.h>
 #include <Logger.h>
+#include <RtcData.h>
 #include <TimeUtils.h>
 
 bool timeSet = false;
@@ -12,6 +13,7 @@ static const char* TAG = "CORE";
 NetStack ns(WIFI_SSID, WIFI_PASSWORD);
 EPD_7in3e epd;
 ImageDataFetcher idf;
+RtcData rtcData;
 
 void flashLight(int times = 1, int delayMs = 200) {
   int previousState = digitalRead(0);
@@ -53,6 +55,9 @@ void setup() {
 
   if (ESP.getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
     Logger::Log(TAG, "Woke up from deep sleep");
+    if (rtcData.ReadAndClear()) {
+      TimeUtils::SetDeviceTime(rtcData.Data()->expectedWakeTime);
+    }
   } else {
     Logger::Log(TAG, "Woke up from reset / fresh boot");
   }
@@ -100,6 +105,10 @@ time_t getSleepUntil(time_t minTime, time_t defaultTime) {
 void loop() {
   time_t now = time(nullptr);
   time_t next = getSleepUntil(now + 2 * 60, now + 5 * 60);
+
+  rtcData.Data()->lastKnownTime = now;
+  rtcData.Data()->expectedWakeTime = next;
+  rtcData.Write();
 
   Logger::Log(TAG, "Going to sleep for until " + TimeUtils::ISOString(&next) + " (" + TimeUtils::TimeDiffString(now, next) + ")");
 

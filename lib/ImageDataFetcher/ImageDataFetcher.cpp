@@ -1,37 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include "ImageDataFetcher.h"
-
-ImageDataFetcher::ImageDataFetcher(const char* ssid, const char* password, const IPAddress &dns1, const IPAddress &dns2) {
-  this->ssid = ssid;
-  this->password = password;
-  this->dns1 = dns1;
-  this->dns2 = dns2;
-}
-
-void ImageDataFetcher::Init() const {
-  dns_setserver(0, dns1);
-  dns_setserver(1, dns2);
-  WiFi.config(IPAddress(10, 0, 0, 24), IPAddress(10, 0, 0, 1), IPAddress(255, 255, 0, 0), dns1, dns2);
-  WiFi.mode(WIFI_STA);
-}
-
-void ImageDataFetcher::Connect() const {
-  Serial.println("connecting to wifi");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(100);
-  }
-  Serial.println("connected to wifi: " + WiFi.localIP().toString());
-}
-
-void ImageDataFetcher::Disconnect() const {
-  WiFi.disconnect(true);
-}
+#include "rootca.h"
 
 void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)(size_t size)) const {
-  WiFiClient client;
+  WiFiClientSecure client;
   HTTPClient http;
+
+  // TODO - Make this configurable?
+  client.setTrustAnchors(new X509List(rootca_der, rootca_der_len));
 
   if (!http.begin(client, IDF_URL)) {
     Serial.println("[HTTP] Unable to connect");
@@ -59,7 +36,7 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
   startCb();
 
   WiFiClient* stream = &http.getStream();
-  u8 data[1000] = {}; // Should be a number that divides 192000 and not too large or we'll run out of memory
+  u8 data[1000] = {}; // Should not be too large or we'll run out of memory
   size_t read = 0;
 
   while (http.connected() && len > 0) {

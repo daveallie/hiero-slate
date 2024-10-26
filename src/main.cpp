@@ -1,9 +1,12 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
 #include <EPD_7in3e.h>
 #include <ImageDataFetcher.h>
+#include <NetStack.h>
 
+NetStack ns(WIFI_SSID, WIFI_PASSWORD);
 EPD_7in3e epd;
-ImageDataFetcher idf("my-ssid", "my-password");
+ImageDataFetcher idf;
 
 void renderRequestStart() {
   epd.StartRenderChunks();
@@ -25,21 +28,29 @@ void setup() {
   Serial.println("\n");
   Serial.println("Starting");
 
-  if (EspClass::getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
+  if (ESP.getResetInfoPtr()->reason == REASON_DEEP_SLEEP_AWAKE) {
     Serial.println("Woke up from deep sleep");
   } else {
     Serial.println("Woke up from reset / fresh boot");
   }
 
-  // Setup e-paper and image data fetcher
+  // Connect to network
+  if (!ns.Connect()) {
+    return;
+  }
+
+  // Set device time
+  ns.SetTime();
+
+  // Initialize display, fetch and display frame
   epd.Init();
-  idf.Init();
-
-  idf.Connect();
   idf.PullDataCb(renderRequestStart, renderRequestImagePart, renderRequestFinish);
-  idf.Disconnect();
 
+  // Sleep the display
   epd.Sleep();
+
+  // Disconnect from network
+  ns.Disconnect();
 }
 
 void loop() {

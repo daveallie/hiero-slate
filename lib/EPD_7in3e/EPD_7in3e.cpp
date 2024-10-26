@@ -122,13 +122,17 @@ void EPD_7in3e::SendData(const u8 data) const {
   // digitalWrite(cs_pin, HIGH);
 }
 
-void EPD_7in3e::WaitUntilNotBusy() const {
+void EPD_7in3e::WaitUntilNotBusy(void (*delayFn)(unsigned long)) const {
   while(!digitalRead(busy_pin)) {
-    delay(1);
+    delayFn(1);
   }
 }
 
-void EPD_7in3e::RefreshDisplay() const {
+void EPD_7in3e::WaitUntilNotBusy() const {
+  WaitUntilNotBusy(delay);
+}
+
+void EPD_7in3e::RefreshDisplay(void (*refreshingFn)(unsigned long)) const {
   Logger::Log(TAG, "Refreshing display");
 
   SendCommand(EPD_CMD_PON); // POWER_ON
@@ -143,11 +147,15 @@ void EPD_7in3e::RefreshDisplay() const {
 
   SendCommand(EPD_CMD_DRF);
   SendData(0x00);
-  WaitUntilNotBusy();
+  WaitUntilNotBusy(refreshingFn);
 
   SendCommand(EPD_CMD_POF);
   SendData(0x00);
   WaitUntilNotBusy();
+}
+
+void EPD_7in3e::RefreshDisplay() const {
+  RefreshDisplay(delay);
 }
 
 void EPD_7in3e::StartRenderChunks() const {
@@ -159,15 +167,10 @@ void EPD_7in3e::SendRenderChunk(const u8 image[], const size_t size) const {
   SPI.writeBytes(image, size);
 }
 
-void EPD_7in3e::FinishRenderChunks() const {
-  // digitalWrite(cs_pin, HIGH);
-  RefreshDisplay();
-}
-
 void EPD_7in3e::Clear(const u8 color) const {
   SendCommand(EPD_CMD_DTM1);
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width / 2; j++) {
+  for (unsigned long i = 0; i < height; i++) {
+    for (unsigned long j = 0; j < width / 2; j++) {
       SendData(color<<4 | color);
     }
     // It seems to crash without a delay

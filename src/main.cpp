@@ -10,6 +10,17 @@ NetStack ns(WIFI_SSID, WIFI_PASSWORD);
 EPD_7in3e epd;
 ImageDataFetcher idf;
 
+void flashLight(int times = 1, int delayMs = 200) {
+  int previousState = digitalRead(0);
+
+  for (int i = 0; i < times; i++) {
+    digitalWrite(0, !previousState);
+    delay(delayMs);
+    digitalWrite(0, previousState);
+    delay(delayMs);
+  }
+}
+
 void renderRequestStart() {
   epd.StartRenderChunks();
 }
@@ -18,17 +29,12 @@ void renderRequestImagePart(const u8 data[], const size_t size) {
   epd.SendRenderChunk(data, size);
 }
 
-void renderRequestFinish(const size_t total) {
-  epd.FinishRenderChunks();
+void refreshingFn(unsigned long ms) {
+  flashLight(1, 50);
 }
 
-void flashLight(int times = 1) {
-  for (int i = 0; i < times; i++) {
-    if (i > 0) delay(200);
-    digitalWrite(0, LOW);
-    delay(200);
-    digitalWrite(0, HIGH);
-  }
+void renderRequestFinish() {
+  epd.RefreshDisplay(refreshingFn);
 }
 
 void setup() {
@@ -50,8 +56,6 @@ void setup() {
 
   // Connect to network
   if (!ns.Connect()) {
-    digitalWrite(0, HIGH);
-    delay(500);
     flashLight(3);
     return;
   }

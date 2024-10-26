@@ -55,10 +55,10 @@ class EPD_7in3e {
 public:
   EPD_7in3e();
   void Init() const;
-  void WaitUntilNotBusy() const;
   void StartRenderChunks() const;
   void SendRenderChunk(const u8 image[], size_t size) const;
-  void FinishRenderChunks() const;
+  void RefreshDisplay() const;
+  void RefreshDisplay(void (*refreshingFn)(unsigned long)) const;
   void Sleep() const;
   void Clear(u8 color) const;
 
@@ -70,8 +70,9 @@ private:
   unsigned long width;
   unsigned long height;
 
+  void WaitUntilNotBusy() const;
+  void WaitUntilNotBusy(void (*delayFn)(unsigned long)) const;
   void Reset() const;
-  void RefreshDisplay() const;
   void SendCommand(u8 command) const;
   void SendData(u8 data) const;
 };

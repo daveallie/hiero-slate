@@ -15,7 +15,7 @@ String buildHeaderValue() {
   return "time=" + String(timestampBuffer);
 }
 
-void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)(size_t size)) const {
+void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)()) const {
   WiFiClientSecure client;
   HTTPClient http;
 
@@ -52,13 +52,11 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
 
   WiFiClient* stream = &http.getStream();
   u8 data[1000] = {}; // Should not be too large or we'll run out of memory
-  size_t read = 0;
 
   while (http.connected() && len > 0) {
     const size_t size = stream->readBytes(data, std::min(len, sizeof(data)));
     if (size) {
       len -= size;
-      read += size;
       processPartCb(data, size);
     } else {
       Logger::Log(TAG, "Read timeout");
@@ -66,7 +64,7 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
   }
 
   http.end();
-  Logger::Log(TAG, "Fetched " + String(read) + " bytes");
+  Logger::Log(TAG, "Finished fetching response");
 
-  finishCb(read);
+  finishCb();
 }

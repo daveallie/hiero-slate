@@ -1,8 +1,12 @@
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 #include <Logger.h>
 #include "NetStack.h"
 
 static const char* TAG = "NETWORK";
+WiFiUDP udp;
+NTPClient ntp(udp);
 
 NetStack::NetStack(const char* ssid, const char* password) {
   this->ssid = ssid;
@@ -19,6 +23,7 @@ bool NetStack::Connect() const {
 
   int retries = 0;
   while (WiFi.status() != WL_CONNECTED) {
+    // Timeout after 10 seconds
     if (++retries > 100) {
       Logger::Log(TAG, "Failed to connect to wifi");
       Disconnect();
@@ -27,25 +32,24 @@ bool NetStack::Connect() const {
     delay(100);
   }
   Logger::Log(TAG, "Connected to wifi with IP: " + WiFi.localIP().toString());
+
+  ntp.begin();
+
   return true;
 }
 
-void NetStack::SetTime() {
-  const char* ntpServer = "pool.ntp.org";
-
-  configTime(0, 0, ntpServer);
-  tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    Logger::Log(TAG, "Failed to obtain time");
-    return;
+time_t NetStack::GetEpochTime() {
+  if (!ntp.update()) {
+    Logger::Log(TAG, "Failed to obtain time from NTP");
+    return 0;
   }
-  setenv("TZ", TIMEZONE, 1);
-  tzset();
 
-  Logger::Log(TAG, "Time obtained");
+  Logger::Log(TAG, "Time obtained from NTP");
+  return ntp.getEpochTime();
 }
 
 void NetStack::Disconnect() {
+  ntp.end();
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Logger::Log(TAG, "Disconnected and turned off wifi");

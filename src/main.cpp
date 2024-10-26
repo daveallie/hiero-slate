@@ -6,6 +6,8 @@
 #include <Logger.h>
 #include <TimeUtils.h>
 
+bool timeSet = false;
+
 static const char* TAG = "CORE";
 NetStack ns(WIFI_SSID, WIFI_PASSWORD);
 EPD_7in3e epd;
@@ -62,7 +64,11 @@ void setup() {
   }
 
   // Set device time
-  ns.SetTime();
+  const time_t epochTime = ns.GetEpochTime();
+  if (epochTime != 0) {
+    TimeUtils::SetDeviceTime(epochTime);
+    timeSet = true;
+  }
 
   // Initialize display, fetch and display frame
   epd.Init();
@@ -76,20 +82,16 @@ void setup() {
 }
 
 time_t getSleepUntil(time_t minTime, time_t defaultTime) {
-  if (!TimeUtils::IsTimeSet()) {
-    Logger::Log(TAG, "Time not set, cron can't be used");
+  if (!timeSet) {
+    Logger::Log(TAG, "Time was not set using network, cron can't be used");
     return defaultTime;
   }
 
-  time_t next = TimeUtils::NextCronTime("0 0/5 * * * *");
+  // Wait at least minTime and get the next cron time
+  time_t next = TimeUtils::NextCronTime("0 0/5 * * * *", minTime);
   if (next == 0) {
     Logger::Log(TAG, "Failed to calculate next cron time");
     return defaultTime;
-  }
-
-  if (next < minTime) {
-    Logger::Log(TAG, "Next cron time too soon, using minimum time");
-    return minTime;
   }
 
   return next;

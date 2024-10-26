@@ -1,6 +1,7 @@
 extern "C" {
   #include <ccronexpr.h>
 }
+#include <sys/time.h>
 #include <Logger.h>
 #include "TimeUtils.h"
 
@@ -9,11 +10,6 @@ static const char* TAG = "TIME";
 time_t TimeUtils::now;
 tm* TimeUtils::nowTimeinfo;
 char TimeUtils::timestampBuffer[20];
-
-bool TimeUtils::IsTimeSet() {
-  SetInternalNow();
-  return nowTimeinfo->tm_year > 0;
-}
 
 void TimeUtils::ISOString(const tm* timeinfo, char* buffer) {
   strftime(buffer, 20, "%Y-%m-%d %H:%M:%S", timeinfo);
@@ -80,9 +76,7 @@ String TimeUtils::TimeDiffString(const time_t time1, const time_t time2) {
   return result;
 }
 
-time_t TimeUtils::NextCronTime(const char* cronExpr) {
-  SetInternalNow();
-
+time_t TimeUtils::NextCronTime(const char* cronExpr, time_t from) {
   const char* err = nullptr;
   cron_expr* expr = cron_parse_expr(cronExpr, &err);
   if (err) {
@@ -90,10 +84,23 @@ time_t TimeUtils::NextCronTime(const char* cronExpr) {
     return 0;
   }
 
-  time_t next = cron_next(expr, now);
+  time_t next = cron_next(expr, from);
   cron_expr_free(expr);
 
   return next;
+}
+
+time_t TimeUtils::NextCronTime(const char* cronExpr) {
+  SetInternalNow();
+  return NextCronTime(cronExpr, now);
+}
+
+void TimeUtils::SetDeviceTime(time_t time) {
+  timeval tv = {time, 0};
+  settimeofday(&tv, nullptr);
+  setenv("TZ", TIMEZONE, 1);
+  tzset();
+  Logger::Log(TAG, "Device time reset");
 }
 
 void TimeUtils::SetInternalNow() {

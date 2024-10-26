@@ -4,6 +4,7 @@
 #include <ImageDataFetcher.h>
 #include <NetStack.h>
 #include <Logger.h>
+#include <TimeUtils.h>
 
 static const char* TAG = "CORE";
 NetStack ns(WIFI_SSID, WIFI_PASSWORD);
@@ -74,9 +75,33 @@ void setup() {
   ns.Disconnect();
 }
 
+time_t getSleepUntil(time_t minTime, time_t defaultTime) {
+  if (!TimeUtils::IsTimeSet()) {
+    Logger::Log(TAG, "Time not set, cron can't be used");
+    return defaultTime;
+  }
+
+  time_t next = TimeUtils::NextCronTime("0 0/5 * * * *");
+  if (next == 0) {
+    Logger::Log(TAG, "Failed to calculate next cron time");
+    return defaultTime;
+  }
+
+  if (next < minTime) {
+    Logger::Log(TAG, "Next cron time too soon, using minimum time");
+    return minTime;
+  }
+
+  return next;
+}
+
 void loop() {
+  time_t now = time(nullptr);
+  time_t next = getSleepUntil(now + 2 * 60, now + 5 * 60);
+
+  Logger::Log(TAG, "Going to sleep for until " + TimeUtils::ISOString(&next) + " (" + TimeUtils::TimeDiffString(now, next) + ")");
+
   // Turn off light
   digitalWrite(0, HIGH);
-  Logger::Log(TAG, "Going to sleep for 5 minutes");
-  ESP.deepSleep(5 * 60 * 1000000); // 5 minutes
+  ESP.deepSleep((next - now) * 1000000);
 }

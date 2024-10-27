@@ -95,6 +95,19 @@ time_t TimeUtils::NextCronTime(const char* cronExpr) {
   return NextCronTime(cronExpr, now);
 }
 
+time_t TimeUtils::NextMultiCronTime(const char** cronExpr, size_t length, time_t from) {
+  time_t res = 0;
+
+  for (size_t i = 0; i < length; i++) {
+    time_t next = NextCronTime(cronExpr[i], from);
+    if (next != 0 && (res == 0 || next < res)) {
+      res = next;
+    }
+  }
+
+  return res;
+}
+
 void TimeUtils::SetDeviceTime(time_t time) {
   timeval tv = {time, 0};
   settimeofday(&tv, nullptr);

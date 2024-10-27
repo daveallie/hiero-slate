@@ -15,6 +15,13 @@ EPD_7in3e epd;
 ImageDataFetcher idf;
 RtcData rtcData;
 
+const char* crons[4] = {
+  "0 0 0-5,23 * * *", // On the hour from 11pm to 5am
+  "0 0/30 6,22 * * *", // Every half-hour for 6am and 10pm
+  "0 0/15 7,20,21 * * *", // Every quarter-hour for 7am, 8pm, and 9pm
+  "0 0/10 8-19 * * *", // Every 10 minutes for 8am-7:50pm
+};
+
 void flashLight(int times = 1, int delayMs = 200) {
   int previousState = digitalRead(0);
 
@@ -93,7 +100,7 @@ time_t getSleepUntil(time_t minTime, time_t defaultTime) {
   }
 
   // Wait at least minTime and get the next cron time
-  time_t next = TimeUtils::NextCronTime("0 0/5 * * * *", minTime);
+  time_t next = TimeUtils::NextMultiCronTime(crons, 4, minTime);
   if (next == 0) {
     Logger::Log(TAG, "Failed to calculate next cron time");
     return defaultTime;
@@ -104,7 +111,7 @@ time_t getSleepUntil(time_t minTime, time_t defaultTime) {
 
 void loop() {
   time_t now = time(nullptr);
-  time_t next = getSleepUntil(now + 2 * 60, now + 5 * 60);
+  time_t next = getSleepUntil(now + 7 * 60, now + 10 * 60);
 
   rtcData.Data()->lastKnownTime = now;
   rtcData.Data()->expectedWakeTime = next;

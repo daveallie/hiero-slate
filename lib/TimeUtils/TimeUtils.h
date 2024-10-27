@@ -14,6 +14,7 @@ public:
   static String TimeDiffString(time_t time1, time_t time2);
   static time_t NextCronTime(const char* cronExpr, time_t from);
   static time_t NextCronTime(const char* cronExpr);
+  static time_t NextMultiCronTime(const char** cronExpr, size_t length, time_t from);
   static void SetDeviceTime(time_t time);
 
 private:

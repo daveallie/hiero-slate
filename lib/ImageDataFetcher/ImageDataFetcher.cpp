@@ -18,6 +18,8 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(),
   WiFiClientSecure client;
   HTTPClient http;
 
+  http.setTimeout(15000);
+
   // TODO - Make this configurable?
   client.setTrustAnchors(new X509List(rootca_der, rootca_der_len));
 

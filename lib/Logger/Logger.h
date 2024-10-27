@@ -1,12 +1,12 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <Arduino.h>
+#include <WString.h>
 
 class Logger {
-public:
+ public:
   static void Log(const char* tag, const char* message);
-  static void Log(const char* tag, const String &message);
+  static void Log(const char* tag, const String& message);
 };
 
 #endif

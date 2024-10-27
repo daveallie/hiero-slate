@@ -1,6 +1,7 @@
-#include <Arduino.h>
-#include <TimeUtils.h>
 #include "Logger.h"
+
+#include <HardwareSerial.h>
+#include <TimeUtils.h>
 
 void Logger::Log(const char* tag, const char* message) {
   Serial.print("[");
@@ -12,6 +13,6 @@ void Logger::Log(const char* tag, const char* message) {
   Serial.println(message);
 }
 
-void Logger::Log(const char *tag, const String &message) {
+void Logger::Log(const char* tag, const String& message) {
   Log(tag, message.c_str());
 }

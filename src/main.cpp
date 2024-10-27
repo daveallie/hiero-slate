@@ -1,9 +1,8 @@
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <EPD_7in3e.h>
+#include <ESP8266WiFi.h>
 #include <ImageDataFetcher.h>
-#include <NetStack.h>
 #include <Logger.h>
+#include <NetStack.h>
 #include <RtcData.h>
 #include <TimeUtils.h>
 
@@ -16,10 +15,10 @@ ImageDataFetcher idf;
 RtcData rtcData;
 
 const char* crons[4] = {
-  "0 0 0-5,23 * * *", // On the hour from 11pm to 5am
-  "0 0/30 6,22 * * *", // Every half-hour for 6am and 10pm
-  "0 0/15 7,20,21 * * *", // Every quarter-hour for 7am, 8pm, and 9pm
-  "0 0/10 8-19 * * *", // Every 10 minutes for 8am-7:50pm
+    "0 0 0-5,23 * * *",      // On the hour from 11pm to 5am
+    "0 0/30 6,22 * * *",     // Every half-hour for 6am and 10pm
+    "0 0/15 7,20,21 * * *",  // Every quarter-hour for 7am, 8pm, and 9pm
+    "0 0/10 8-19 * * *",     // Every 10 minutes for 8am-7:50pm
 };
 
 void flashLight(int times = 1, int delayMs = 200) {
@@ -33,21 +32,15 @@ void flashLight(int times = 1, int delayMs = 200) {
   }
 }
 
-void renderRequestStart() {
-  epd.StartRenderChunks();
-}
+void renderRequestStart() { epd.StartRenderChunks(); }
 
 void renderRequestImagePart(const u8 data[], const size_t size) {
   epd.SendRenderChunk(data, size);
 }
 
-void refreshingFn(unsigned long ms) {
-  flashLight(1, 50);
-}
+void refreshingFn(unsigned long ms) { flashLight(1, 50); }
 
-void renderRequestFinish() {
-  epd.RefreshDisplay(refreshingFn);
-}
+void renderRequestFinish() { epd.RefreshDisplay(refreshingFn); }
 
 void setup() {
   // Turn on light
@@ -84,7 +77,8 @@ void setup() {
 
   // Initialize display, fetch and display frame
   epd.Init();
-  idf.PullDataCb(renderRequestStart, renderRequestImagePart, renderRequestFinish);
+  idf.PullDataCb(renderRequestStart, renderRequestImagePart,
+                 renderRequestFinish);
 
   // Sleep the display
   epd.Sleep();
@@ -117,7 +111,8 @@ void loop() {
   rtcData.Data()->expectedWakeTime = next;
   rtcData.Write();
 
-  Logger::Log(TAG, "Going to sleep for until " + TimeUtils::ISOString(&next) + " (" + TimeUtils::TimeDiffString(now, next) + ")");
+  Logger::Log(TAG, "Going to sleep for until " + TimeUtils::ISOString(&next) +
+                       " (" + TimeUtils::TimeDiffString(now, next) + ")");
 
   // Turn off light
   digitalWrite(0, HIGH);

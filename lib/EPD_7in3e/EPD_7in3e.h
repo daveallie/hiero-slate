@@ -2,12 +2,12 @@
 #define EPD_7IN3E_H
 
 // Colors
-#define EPD_7IN3E_BLACK   0x0   /// 000
-#define EPD_7IN3E_WHITE   0x1   /// 001
-#define EPD_7IN3E_YELLOW  0x2   /// 010
-#define EPD_7IN3E_RED     0x3   /// 011
-#define EPD_7IN3E_BLUE    0x5   /// 101
-#define EPD_7IN3E_GREEN   0x6   /// 110
+#define EPD_7IN3E_BLACK 0x0   /// 000
+#define EPD_7IN3E_WHITE 0x1   /// 001
+#define EPD_7IN3E_YELLOW 0x2  /// 010
+#define EPD_7IN3E_RED 0x3     /// 011
+#define EPD_7IN3E_BLUE 0x5    /// 101
+#define EPD_7IN3E_GREEN 0x6   /// 110
 
 // Commands
 #define EPD_CMD_UNKNOWN01 0xAA
@@ -51,8 +51,10 @@
 #define EPD_CMD_CCSET 0xE0
 #define EPD_CMD_PWS 0xE3
 
+#include <c_types.h>
+
 class EPD_7in3e {
-public:
+ public:
   EPD_7in3e();
   void Init() const;
   void StartRenderChunks() const;
@@ -62,7 +64,7 @@ public:
   void Sleep() const;
   void Clear(u8 color) const;
 
-private:
+ private:
   unsigned int reset_pin;
   unsigned int dc_pin;
   unsigned int cs_pin;

@@ -1,7 +1,9 @@
 #ifndef RTCDATA_H
 #define RTCDATA_H
 
-#include <Arduino.h>
+#include <c_types.h>
+
+#include <ctime>
 
 struct RtcObject {
   time_t lastKnownTime;
@@ -9,18 +11,18 @@ struct RtcObject {
 };
 
 struct SignedRtcObject {
-  uint32_t crc32;
+  u8 crc32;
   RtcObject rtcObject;
 };
 
 class RtcData {
-public:
+ public:
   bool ReadAndClear();
   bool Write();
   RtcObject* Data();
 
-private:
-  SignedRtcObject signedData {};
+ private:
+  SignedRtcObject signedData{};
   u32 CalculateCRC32() const;
 };
 

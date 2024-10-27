@@ -1,17 +1,20 @@
-#include <ESP8266WiFi.h>
+#include "ImageDataFetcher.h"
+
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
 #include <Logger.h>
 #include <TimeUtils.h>
-#include "ImageDataFetcher.h"
+
 #include "rootca.h"
 
 static const char* TAG = "IDF";
 
-String buildHeaderValue() {
-  return "time=" + TimeUtils::NowISOString();
-}
+String buildHeaderValue() { return "time=" + TimeUtils::NowISOString(); }
 
-void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const u8 data[], size_t size), void (*finishCb)()) const {
+void ImageDataFetcher::PullDataCb(void (*startCb)(),
+                                  void (*processPartCb)(const u8 data[],
+                                                        size_t size),
+                                  void (*finishCb)()) const {
   WiFiClientSecure client;
   HTTPClient http;
 
@@ -28,7 +31,8 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
 
   const int httpCode = http.GET();
   if (httpCode <= 0) {
-    Logger::Log(TAG, "GET failed, error: " + HTTPClient::errorToString(httpCode));
+    Logger::Log(TAG,
+                "GET failed, error: " + HTTPClient::errorToString(httpCode));
     return;
   }
 
@@ -39,7 +43,8 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
 
   size_t len = http.getSize();
   if (len != 192000) {
-    Logger::Log(TAG, "Was expecting response of 192000 bytes, got: " + String(len));
+    Logger::Log(TAG,
+                "Was expecting response of 192000 bytes, got: " + String(len));
     return;
   }
 
@@ -47,7 +52,7 @@ void ImageDataFetcher::PullDataCb(void (*startCb)(), void (*processPartCb)(const
   startCb();
 
   WiFiClient* stream = &http.getStream();
-  u8 data[1000] = {}; // Should not be too large or we'll run out of memory
+  u8 data[1000] = {};  // Should not be too large or we'll run out of memory
 
   while (http.connected() && len > 0) {
     const size_t size = stream->readBytes(data, std::min(len, sizeof(data)));

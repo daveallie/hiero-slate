@@ -1,7 +1,7 @@
-#include <Arduino.h>
-#include <SPI.h>
 #include "EPD_7in3e.h"
+
 #include <Logger.h>
+#include <SPI.h>
 
 static const char* TAG = "EPD";
 
@@ -20,9 +20,10 @@ EPD_7in3e::EPD_7in3e() {
   pinMode(busy_pin, INPUT);
 
   // Init outputs
-  digitalWrite(cs_pin, LOW); // Leave CS low to ensure display is always selected
-  digitalWrite(dc_pin, HIGH); // Assume data
-  digitalWrite(reset_pin, HIGH); // Leave reset pin high
+  // Leave CS low to ensure display is always selected
+  digitalWrite(cs_pin, LOW);
+  digitalWrite(dc_pin, HIGH);     // Assume data
+  digitalWrite(reset_pin, HIGH);  // Leave reset pin high
 }
 
 void EPD_7in3e::Init() const {
@@ -123,19 +124,17 @@ void EPD_7in3e::SendData(const u8 data) const {
 }
 
 void EPD_7in3e::WaitUntilNotBusy(void (*delayFn)(unsigned long)) const {
-  while(!digitalRead(busy_pin)) {
+  while (!digitalRead(busy_pin)) {
     delayFn(1);
   }
 }
 
-void EPD_7in3e::WaitUntilNotBusy() const {
-  WaitUntilNotBusy(delay);
-}
+void EPD_7in3e::WaitUntilNotBusy() const { WaitUntilNotBusy(delay); }
 
 void EPD_7in3e::RefreshDisplay(void (*refreshingFn)(unsigned long)) const {
   Logger::Log(TAG, "Refreshing display");
 
-  SendCommand(EPD_CMD_PON); // POWER_ON
+  SendCommand(EPD_CMD_PON);  // POWER_ON
   WaitUntilNotBusy();
 
   // Second setting
@@ -154,9 +153,7 @@ void EPD_7in3e::RefreshDisplay(void (*refreshingFn)(unsigned long)) const {
   WaitUntilNotBusy();
 }
 
-void EPD_7in3e::RefreshDisplay() const {
-  RefreshDisplay(delay);
-}
+void EPD_7in3e::RefreshDisplay() const { RefreshDisplay(delay); }
 
 void EPD_7in3e::StartRenderChunks() const {
   SendCommand(EPD_CMD_DTM1);
@@ -171,7 +168,7 @@ void EPD_7in3e::Clear(const u8 color) const {
   SendCommand(EPD_CMD_DTM1);
   for (unsigned long i = 0; i < height; i++) {
     for (unsigned long j = 0; j < width / 2; j++) {
-      SendData(color<<4 | color);
+      SendData(color << 4 | color);
     }
     // It seems to crash without a delay
     delayMicroseconds(100);

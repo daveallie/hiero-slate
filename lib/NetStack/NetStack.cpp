@@ -1,8 +1,9 @@
-#include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
-#include <NTPClient.h>
-#include <Logger.h>
 #include "NetStack.h"
+
+#include <ESP8266WiFi.h>
+#include <Logger.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 static const char* TAG = "NETWORK";
 WiFiUDP udp;

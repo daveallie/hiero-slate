@@ -1,8 +1,9 @@
 extern "C" {
-  #include <ccronexpr.h>
+#include <ccronexpr.h>
 }
-#include <sys/time.h>
 #include <Logger.h>
+#include <sys/time.h>
+
 #include "TimeUtils.h"
 
 static const char* TAG = "TIME";
@@ -95,7 +96,8 @@ time_t TimeUtils::NextCronTime(const char* cronExpr) {
   return NextCronTime(cronExpr, now);
 }
 
-time_t TimeUtils::NextMultiCronTime(const char** cronExpr, size_t length, time_t from) {
+time_t TimeUtils::NextMultiCronTime(const char** cronExpr, size_t length,
+                                    time_t from) {
   time_t res = 0;
 
   for (size_t i = 0; i < length; i++) {

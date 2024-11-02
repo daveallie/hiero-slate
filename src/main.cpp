@@ -60,6 +60,9 @@ void setup() {
     }
   } else {
     Logger::Log(TAG, "Woke up from reset / fresh boot");
+    epd.Init();
+    epd.Clear(EPD_7IN3E_WHITE);
+    epd.Sleep();
   }
 
   // Connect to network
